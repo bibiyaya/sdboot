@@ -1,16 +1,18 @@
+#include "uart.h"
+
 /********************NAND****************************/
 #define NFCONF *((volatile unsigned long*)0x70200000)
 #define NFCONT *((volatile unsigned long*)0x70200004)
 #define NFCMMD *((volatile unsigned long*)0x70200008)
 #define NFADDR *((volatile unsigned long*)0x7020000C)
-#define NFDATA *((volatile unsigned char*)0x70200010)
+#define NFDATA *((volatile unsigned long*)0x70200010)
 #define NFSTAT *((volatile unsigned long*)0x70200028)
 
 #define MEM_SYS_CFG *((volatile unsigned long*)0x7E00F120)
 
-#define TACLS  2  //7
-#define TWRPH0 1  //7
-#define TWRPH1 1  //7
+#define TACLS  7  //7
+#define TWRPH0 7  //7
+#define TWRPH1 7  //7
 #define PAGE_SIZE 2048
 #define BLOCK_SIZE (PAGE_SIZE*64)
 
@@ -49,12 +51,12 @@ void nand_reset(){
 
 void nand_read_status()
 {
-    int status;
+    int status = 0x00;
 
     nand_cmd(0x70);
     status = NFDATA;
 
-    if (status&0x01 == 0x01)
+    if ((status&0x01) == 0x01)
     {
         printf_str("\r\nCommand FAIL");
     }
@@ -86,13 +88,15 @@ void nand_init()
 /*
  * nand_start: must be the start of the page
  */
-int nand_read(unsigned int nand_start, unsigned int ddr_start, unsigned int len)
+int nand_read(unsigned int nand_start, unsigned char * buf, unsigned int len)
 {
-    unsigned long rest = len;
-    unsigned long addr = nand_start;
-    unsigned long page;
-    unsigned char *dest = (unsigned char *)ddr_start;
+/*
+    unsigned int rest = len;
+    unsigned int addr = nand_start;
+    unsigned int page;
+    //unsigned char *dest = (unsigned char *)ddr_start;
     int i;
+    unsigned char data;
 
     nand_select();
     while(rest > 0){
@@ -101,15 +105,45 @@ int nand_read(unsigned int nand_start, unsigned int ddr_start, unsigned int len)
         nand_cmd(0x30);
         nand_ready();
 
+        for(i=0;i<1000;i++);
+
         page = rest>PAGE_SIZE?PAGE_SIZE:rest;
         for(i = 0; i != page; ++i){
-            *dest++ = NFDATA;
+            data = NFDATA;
+            buf[i] = data;
         }
         rest -= page;
         addr += page;
     }
     nand_deselect();
-
+*/
+    unsigned int addr = nand_start;  
+    int count = 0, i = 0;  
+    unsigned char *dest = buf;  
+    unsigned char data = 0;  
+  
+    NFCONT &= ~(1 << 1);  
+  
+    while (count < len) {  
+        NFCMMD = 0x00;  
+        nand_addr(addr);  
+        NFCMMD = 0x30;  
+        while ((NFSTAT & 0x1) == 0);  
+  
+        for (i = 0; i < 2048 && count < len; i++) {  
+            data = NFDATA;  
+            /*for the 1st 4*4K, just used 2K each*/  
+            if(addr < 16384) {  
+                if(i < 2048)  
+                    dest[count++] = data;  
+            } else  
+                dest[count++] = data;  
+        }  
+        addr += 4096;  
+    }  
+  
+    NFCONT |= (1 << 1);  
+  
     return 0;
 }
 
@@ -162,6 +196,7 @@ void nand_write(unsigned int nand_start, unsigned char * buf, unsigned int len)
 	nand_deselect();
 }
 
+/*
 void copy2ddr(unsigned long length){
 	unsigned long rest = length;
 	unsigned long size;
@@ -177,7 +212,9 @@ void copy2ddr(unsigned long length){
 
 	nand_read(PAGE_SIZE*4, 0x50000000+PAGE_SIZE, rest);
 }
+*/
 
+/*
 void store2nand(unsigned long ddr_start, unsigned long length){
 	unsigned char* src = (unsigned char*)ddr_start;
 	unsigned long rest = length;
@@ -199,7 +236,9 @@ void store2nand(unsigned long ddr_start, unsigned long length){
 
 	nand_write(PAGE_SIZE*4, src+2048*4, rest);
 }
+*/
 
+/*
 void clear_bss(unsigned long begin, unsigned long length){
 	unsigned long* dst = (unsigned long*)begin;
 	unsigned long count = (length+3)/4;
@@ -208,3 +247,4 @@ void clear_bss(unsigned long begin, unsigned long length){
 		*dst++ = 0;
 	}
 }
+*/

@@ -11,8 +11,8 @@
 extern "C" {
 #endif
 
-int nand_read(unsigned int nand_start, unsigned int ddr_start, unsigned int len);
-int nand_write(unsigned int nand_start, unsigned int ddr_start, unsigned int len);
+int nand_read(unsigned int nand_start, unsigned char* buf, unsigned int len);
+int nand_write(unsigned int nand_start, unsigned char* buf, unsigned int len);
 void nand_erase(unsigned int addr);
 
 #ifdef __cplusplus

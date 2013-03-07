@@ -51,13 +51,15 @@ uint8_t get_packet( uint8_t *buf)
 }
 int main(void)
 {
-    uint32_t i,offset=0,blocks;
-    bool_t eot=0;
-    uint8_t *dbuf = 0x50004000;  // address of ddr ram
-    uint8_t *ddr_write = 0x57e00000;
-    uint8_t *ddr_read = 0x50004000;
-    uint8_t pp = 0,cmd = NAK;
-    uint8_t buf[128];
+    uint32_t i = 0;
+    //bool_t eot=0;
+    //uint8_t *dbuf = 0x50004000;  // address of ddr ram
+    //uint8_t *ddr_write = 0x57e00000;
+    //uint8_t *ddr_read = 0x50004000;
+    //uint8_t pp = 0,cmd = NAK;
+    //unsigned char buf[128];
+    //unsigned char buf_w[2048];
+    unsigned char buf_r[2048];
     uint8_t errorcode = 0;
     //pg_gpio_reg = (void*)0x7f008000;
     //chip_addr = (uint16_t *)flash_base_addr;
@@ -96,38 +98,45 @@ int main(void)
 
     for(i=0;i<2048;i++)
     {
-        ddr_write[i] = 'a';
+        //ddr_write[i] = 'a';
+        //buf_w[i] = 'k';
+        buf_r[i] = 'b';
+        if ( i < 10)
+        {
+            printf_byte(buf_r[i]);
+        }
     }
 
-    for(i=0;i<1000;i++){}
+    for(i=0;i<1000;i++);
 
     /* nand flash erase */
     // erase block 0
     printf_str("\r\nnand erase...");
-    nand_erase(0);
-    for(i=0;i<1000;i++){}
+    //nand_erase(0);
+    for(i=0;i<1000;i++);
 
     /* nand flash write */
     printf_str("\r\nnand write...");
-    nand_write(8192,0x57e00000,2048);
-    for(i=0;i<1000;i++){}
+    //nand_write(0,buf_w,2048);
+    for(i=0;i<1000;i++);
 
     /* nand flash read */
     printf_str("\r\nnand read...");
-    nand_read(8192,0x50004000,2048);
-    for(i=0;i<1000;i++){}
+    nand_read(0,buf_r,2048);
+    for(i=0;i<1000;i++);
 
     printf_str("\r\nread date from ddr");
     for(i=0;i<128;i++)
     {
-        if( ddr_read[i] != 'a')
+        if( buf_r[i] != 'k')
         {
-            errorcode = 1;            
-            break;
+            errorcode += 1;            
+            //break;
+            printf_byte(buf_r[i]);
         }
     }
 
-    if (errorcode == 1)
+    if (errorcode != 0)
     {
         printf_str("\r\nnand test error...");
     }

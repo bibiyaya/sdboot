@@ -20,6 +20,8 @@
 extern "C" {
 #endif
 
+#include "config.h"
+
 //UTRSTAT状态位定义
 #define UartTXShiftEmpty    (1<<2)  //1:发送移位寄存器空,0:非空
 #define UartTxBufEmpty      (1<<1)  //1:发送缓冲区空,0:非空
