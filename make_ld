@@ -1,0 +1,27 @@
+include ld_obj_list
+ifneq ($(target),)
+include ./djyos/port/$(target).mld
+endif
+
+debug :$(target).ld
+	$(CC) $(LDFLAGS) $(preload_obj) $(critical_obj) $(sysload_obj) -o $(target).elf -T$(target).ld
+	$(objcopy) $(target).elf $(target).bin
+	$(size) $(target).elf
+	rm -f ld_obj_list
+boot_rom:$(target).ld
+	$(CC) $(LDFLAGS) $(boot_rom_obj) -o $(target).elf -T$(target).ld
+	$(objcopy) $(target).elf $(target).bin
+	$(objdump) $(target).elf > $(target).dis
+	$(size) $(target).elf
+	rm -f ld_obj_list
+run_inram:$(target).ld
+	$(CC) $(LDFLAGS) $(rom_init_obj) $(preload_obj) $(critical_obj) $(sysload_obj) -o $(target).elf -T$(target).ld
+	$(objcopy) $(target).elf $(target).bin
+	$(size) $(target).elf
+	rm -f ld_obj_list
+run_inflash:$(target).ld
+	$(CC) $(LDFLAGS) $(rom_init_obj) $(preload_obj) $(critical_obj) $(sysload_obj) -o $(target).elf -T$(target).ld
+	$(objcopy) $(target).elf $(target).bin
+	$(size) $(target).elf
+	rm -f ld_obj_list
+

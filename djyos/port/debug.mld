@@ -1,0 +1,62 @@
+.PHONY: debug.ld
+debug.ld:    # '@'用于屏蔽printf的屏幕输出
+	@printf "/*本文件是由makefile生成的*/ \n\
+ENTRY(__asm_set_debug)\n\
+MEMORY\n\
+{  \n\
+\tram (wx)  : org = 0x0c000000,   len = 8M\n\
+}\n\
+SECTIONS\n\
+{\n\
+\t. = 0xc000000; \n\
+\t \n\
+\t.text : \n\
+\t{  \n\
+\t   * (.text)\n\
+\t} >ram \n\
+\t \n\
+\t.rodata : \n\
+\t{  \n\
+\t   * (.rodata*)\n\
+\t} >ram \n\
+\t \n\
+\t.data :  \n\
+\t{  \n\
+\t   * (.data)\n\
+\t} >ram \n\
+\t \n\
+\tzi_sysload_start = .;    \n\
+\t.bss : \n\
+\t{ \n\
+\t   * (.bss)\n\
+\t} >ram \n\
+\tzi_sysload_limit = .;    \n\
+\t \n\
+\t_ISR_STARTADDRESS = 0x0c7fff00;    \n\
+\tUSR_stack_size   =  0x1000;     /*用户模式栈,启动多事件调度前用，并非main的栈*/   \n\
+\tSVC_stack_size   =  0x10000;   /*操作系统栈，中断也使用*/  \n\
+\tUndef_stack_size =  0x100;     /*为定义指令异常栈*/    \n\
+\tAbort_stack_size =  0x100;     /*数据异常栈*/  \n\
+\tIRQ_stack_size   =  0x1000;    /*irq异常栈,可支持68次中断嵌套*/    \n\
+\tFIQ_stack_size   =  0x0;        /*fiq栈,44b0x不使用fiq*/   \n\
+\t \n\
+\tFIQ_stack        =  _ISR_STARTADDRESS; \n\
+\tIRQ_stack        =  FIQ_stack   - FIQ_stack_size;  \n\
+\tAbort_stack      =  IRQ_stack   - IRQ_stack_size;  \n\
+\tIRQ_stack_bottom =  Abort_stack - 4;  \n\
+\tUndef_stack      =  Abort_stack - Abort_stack_size;    \n\
+\tSVC_stack        =  Undef_stack - Undef_stack_size;    \n\
+\tUSR_stack        =  SVC_stack   - SVC_stack_size;  \n\
+\tcfg_heap_top     =  (USR_stack - USR_stack_size)&( ~ 7);  /*向下对齐*/ \n\
+\tcfg_heap_bottom  =  (zi_sysload_limit + 7)&( ~ 7);          /*向上对齐*/ \n\
+\t \n\
+\tuser_irq         =  _ISR_STARTADDRESS; \n\
+\tuser_fiq         =  _ISR_STARTADDRESS + 4; \n\
+\tuser_undef       =  _ISR_STARTADDRESS + 8; \n\
+\tuser_swi         =  _ISR_STARTADDRESS + 12;    \n\
+\tuser_pabort      =  _ISR_STARTADDRESS + 16;    \n\
+\tuser_dabort      =  _ISR_STARTADDRESS + 20;    \n\
+\tuser_reserved    =  _ISR_STARTADDRESS + 24;    \n\
+\t \n\
+}  \n" >$(target).ld
+	echo  creat $(target).ld file,OK!

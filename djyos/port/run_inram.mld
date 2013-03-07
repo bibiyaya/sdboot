@@ -1,0 +1,111 @@
+.PHONY: run_inram.ld
+run_inram.ld:    # '@'用于屏蔽printf的屏幕输出
+	@printf "/*本文件是由makefile生成的*/ \n\
+/*如果地址之间进行加减运算,则标识符和运算符之间有空格.*/ \n\
+ENTRY(_start)\n\
+MEMORY\n\
+{  \n\
+\trom (rx)  : org = 0,            len = 2M\n\
+\tram (wx)  : org = 0x0c000000,   len = 8M\n\
+}\n\
+SECTIONS\n\
+{\n\
+\t.roinit :\n\
+\t{  \n\
+\t   init_start = .; \n\
+\t   $(rom_init_obj)   (.text)    \n\
+\t} >rom \n\
+\tinit_limit = .;    \n\
+\t \n\
+\ttext_preload_load_start = .; \n\
+\t.text1 : AT(text_preload_load_start) \n\
+\t{  \n\
+\t     text_preload_run_start = .; \n\
+\t     $(preload_obj) $(critical_obj) (.text) \n\
+\t} >ram \n\
+\ttext_preload_run_limit = .;  \n\
+\t \n\
+\trodata_preload_load_start = text_preload_load_start + ( text_preload_run_limit - text_preload_run_start);  \n\
+\t/*SIZEOF (.text)似乎不可靠，还是用limit - start放心些）*/  \n\
+\t.rodata1 : AT(rodata_preload_load_start) \n\
+\t{  \n\
+\t    rodata_preload_run_start = .;    \n\
+\t    $(preload_obj) $(critical_obj) (.rodata*)  \n\
+\t} >ram \n\
+\trodata_preload_run_limit = .;    \n\
+\t \n\
+\trw_preload_load_start = rodata_preload_load_start + ( rodata_preload_run_limit - rodata_preload_run_start);    \n\
+\t.data1 : AT(rw_preload_load_start)   \n\
+\t{  \n\
+\t    rw_preload_run_start = .;    \n\
+\t    $(preload_obj) $(critical_obj) (.data) \n\
+\t} >ram \n\
+\trw_preload_run_limit = .;    \n\
+\t \n\
+\tzi_preload_start = .;    \n\
+\t.bss1 :    \n\
+\t{  \n\
+\t    $(preload_obj) $(critical_obj) (.bss)  \n\
+\t} >ram \n\
+\tzi_preload_limit = .;    \n\
+\t \n\
+\ttext_sysload_load_start = rw_preload_load_start + ( rw_preload_run_limit - rw_preload_run_start ); \n\
+\t.text : AT(text_sysload_load_start) \n\
+\t{  \n\
+\t   text_sysload_run_start = .;   \n\
+\t   * (.text)\n\
+\t} >ram \n\
+\ttext_sysload_run_limit = .;  \n\
+\t \n\
+\trodata_sysload_load_start = text_sysload_load_start + ( text_sysload_run_limit - text_sysload_run_start);  \n\
+\t/*SIZEOF (.text)似乎不可靠，还是用limit - start放心些）*/  \n\
+\t.rodata : AT(rodata_sysload_load_start) \n\
+\t{  \n\
+\t   rodata_sysload_run_start = .;    \n\
+\t   * (.rodata*)\n\
+\t} >ram \n\
+\trodata_sysload_run_limit = .;    \n\
+\t \n\
+\trw_sysload_load_start = rodata_sysload_load_start + ( rodata_sysload_run_limit - rodata_sysload_run_start);    \n\
+\t.data : AT(rw_sysload_load_start)   \n\
+\t{  \n\
+\t   rw_sysload_run_start = .;    \n\
+\t   * (.data)\n\
+\t} >ram \n\
+\trw_sysload_run_limit = .;    \n\
+\t \n\
+\tzi_sysload_start = .;    \n\
+\t.bss : \n\
+\t{ \n\
+\t   * (.bss)\n\
+\t} >ram \n\
+\tzi_sysload_limit = .;    \n\
+\t \n\
+\t_ISR_STARTADDRESS = 0x0c7fff00;    \n\
+\tUSR_stack_size   =  0x1000;     /*用户模式栈,启动多事件调度前用，并非main的栈*/   \n\
+\tSVC_stack_size   =  0x10000;   /*操作系统栈，中断也使用*/  \n\
+\tUndef_stack_size =  0x100;     /*为定义指令异常栈*/    \n\
+\tAbort_stack_size =  0x100;     /*数据异常栈*/  \n\
+\tIRQ_stack_size   =  0x1000;    /*irq异常栈,可支持68次中断嵌套*/    \n\
+\tFIQ_stack_size   =  0x0;        /*fiq栈,44b0x不使用fiq*/   \n\
+\t \n\
+\tFIQ_stack        =  _ISR_STARTADDRESS; \n\
+\tIRQ_stack        =  FIQ_stack   - FIQ_stack_size;  \n\
+\tAbort_stack      =  IRQ_stack   - IRQ_stack_size;  \n\
+\tIRQ_stack_bottom =  Abort_stack - 4;  \n\
+\tUndef_stack      =  Abort_stack - Abort_stack_size;    \n\
+\tSVC_stack        =  Undef_stack - Undef_stack_size;    \n\
+\tUSR_stack        =  SVC_stack   - SVC_stack_size;  \n\
+\tcfg_heap_top     =  (USR_stack - USR_stack_size)&( ~ 7);  /*向下对齐*/ \n\
+\tcfg_heap_bottom  =  (zi_sysload_limit + 7)&( ~ 7);          /*向上对齐*/ \n\
+\t \n\
+\tuser_irq         =  _ISR_STARTADDRESS; \n\
+\tuser_fiq         =  _ISR_STARTADDRESS + 4; \n\
+\tuser_undef       =  _ISR_STARTADDRESS + 8; \n\
+\tuser_swi         =  _ISR_STARTADDRESS + 12;    \n\
+\tuser_pabort      =  _ISR_STARTADDRESS + 16;    \n\
+\tuser_dabort      =  _ISR_STARTADDRESS + 20;    \n\
+\tuser_reserved    =  _ISR_STARTADDRESS + 24;    \n\
+\t \n\
+}  \n" >$(target).ld
+	echo  creat $(target).ld file,OK!
