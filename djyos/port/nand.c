@@ -49,9 +49,9 @@ void nand_reset(){
 	nand_deselect();
 }
 
-void nand_read_status()
+unsigned char nand_read_status()
 {
-    int status = 0x00;
+    char status = 0x00;
 
     nand_cmd(0x70);
     status = NFDATA;
@@ -64,6 +64,8 @@ void nand_read_status()
     {
         printf_str("\r\nCommand OK");
     }
+
+    return status;
 }
 
 #define GPOCON (*(volatile unsigned long*)(0x7F008140))
@@ -149,17 +151,36 @@ int nand_read(unsigned int nand_start, unsigned char * buf, unsigned int len)
   
     return 0;
 }
-
-void nand_erase_block(unsigned long addr)
+/*
+ * addr:要擦除的块地址
+ * size:要擦除的大小
+ */
+void nand_erase(unsigned long addr, unsigned int size)
 {
+    int n = size/BLOCK_SIZE;
+
+    if( (addr % BLOCK_SIZE) !=0)
+    {
+        return -1;
+    }
+
+    for(i=0;i<=n;i++)
+    {
+        nand_erase_one_block(addr);
+        addr += BOLCK_SIZE;
+    }
 
 }
 
-void nand_erase(unsigned int addr)
+/*
+ * addr: 块的首地址
+ */
+unsigned char nand_erase_one_block(unsigned int addr)
 {
-    int page = addr/PAGE_SIZE;
+    //int page = addr/PAGE_SIZE;
     //int blocks = size/BLOCK_SIZE;
     //int i = 0;
+    unsigned char errorcode = 0;
 
     nand_select();
     nand_cmd(0x60);
@@ -168,8 +189,10 @@ void nand_erase(unsigned int addr)
     NFADDR = (page>>16)&0xff;
     nand_cmd(0xd0);
     nand_ready();
-    nand_read_status();
+    errorcode = nand_read_status();
     nand_deselect();
+
+    return errorcode;
 }
 
 /*
