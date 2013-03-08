@@ -29,6 +29,10 @@ _ReSharper*/
 
 #Ignore files build by gcc
 *.o
+*.ld
+*.bin
+*.elf
+*.dis
 
 #Ignore files build by emacs backup
 *.~*~

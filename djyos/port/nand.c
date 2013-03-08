@@ -5,7 +5,7 @@
 #define NFCONT *((volatile unsigned long*)0x70200004)
 #define NFCMMD *((volatile unsigned long*)0x70200008)
 #define NFADDR *((volatile unsigned long*)0x7020000C)
-#define NFDATA *((volatile unsigned long*)0x70200010)
+#define NFDATA *((volatile unsigned char*)0x70200010)
 #define NFSTAT *((volatile unsigned long*)0x70200028)
 
 #define MEM_SYS_CFG *((volatile unsigned long*)0x7E00F120)
@@ -105,8 +105,6 @@ int nand_read(unsigned int nand_start, unsigned char * buf, unsigned int len)
         nand_cmd(0x30);
         nand_ready();
 
-        for(i=0;i<1000;i++);
-
         page = rest>PAGE_SIZE?PAGE_SIZE:rest;
         for(i = 0; i != page; ++i){
             data = NFDATA;
@@ -122,13 +120,17 @@ int nand_read(unsigned int nand_start, unsigned char * buf, unsigned int len)
     unsigned char *dest = buf;  
     unsigned char data = 0;  
   
-    NFCONT &= ~(1 << 1);  
+    //NFCONT &= ~(1 << 1);
+    nand_select();  
   
     while (count < len) {  
-        NFCMMD = 0x00;  
+        //NFCMMD = 0x00;
+        nand_cmd(0x00);  
         nand_addr(addr);  
-        NFCMMD = 0x30;  
-        while ((NFSTAT & 0x1) == 0);  
+        //NFCMMD = 0x30;
+        nand_cmd(0x30);  
+        //while ((NFSTAT & 0x1) == 0);
+        nand_ready();
   
         for (i = 0; i < 2048 && count < len; i++) {  
             data = NFDATA;  
@@ -142,7 +144,8 @@ int nand_read(unsigned int nand_start, unsigned char * buf, unsigned int len)
         addr += 4096;  
     }  
   
-    NFCONT |= (1 << 1);  
+    //NFCONT |= (1 << 1);
+    nand_deselect();  
   
     return 0;
 }
