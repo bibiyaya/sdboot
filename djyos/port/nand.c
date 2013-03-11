@@ -155,6 +155,28 @@ int nand_read(unsigned int nand_start, unsigned char * buf, unsigned int len)
   
     return 0;
 }
+
+/*
+ * addr: 块的首地址
+ */
+unsigned char nand_erase_one_block(unsigned int addr)
+{
+    int block = addr/BLOCK_SIZE;
+    unsigned char errorcode = 0;
+
+    nand_select();
+    nand_cmd(0x60);
+    NFADDR = block&0xff;
+    NFADDR = (block>>8)&0xff;
+    NFADDR = (block>>16)&0xff;
+    nand_cmd(0xd0);
+    nand_ready();
+    errorcode = nand_read_status();
+    nand_deselect();
+
+    return errorcode;
+}
+
 /*
  * addr: addresss of block which will be erase
  * size: 要擦除的大小
@@ -168,36 +190,14 @@ void nand_erase(unsigned long addr, unsigned int size)
         return -1;
     }
 
-    for(i=0;i<=n;i++)
+    for(int i=0;i<=n;i++)
     {
         nand_erase_one_block(addr);
-        addr += BOLCK_SIZE;
+        addr += BLOCK_SIZE;
     }
 
 }
 
-/*
- * addr: 块的首地址
- */
-unsigned char nand_erase_one_block(unsigned int addr)
-{
-    //int page = addr/PAGE_SIZE;
-    //int blocks = size/BLOCK_SIZE;
-    //int i = 0;
-    unsigned char errorcode = 0;
-
-    nand_select();
-    nand_cmd(0x60);
-    NFADDR = page&0xff;
-    NFADDR = (page>>8)&0xff;
-    NFADDR = (page>>16)&0xff;
-    nand_cmd(0xd0);
-    nand_ready();
-    errorcode = nand_read_status();
-    nand_deselect();
-
-    return errorcode;
-}
 
 /*
  * nand_start: must be at the start of page

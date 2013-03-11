@@ -13,7 +13,7 @@ extern "C" {
 
 int nand_read(unsigned int nand_start, unsigned char* buf, unsigned int len);
 int nand_write(unsigned int nand_start, unsigned char* buf, unsigned int len);
-void nand_erase(unsigned int addr);
+void nand_erase(unsigned int addr,unsigned int size);
 
 #ifdef __cplusplus
 }

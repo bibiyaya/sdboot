@@ -59,7 +59,7 @@ int main(void)
     uint8_t pp  = 0;
     uint8_t cmd = NAK;
     uint32_t offset = 0;
-    //unsigned char buf[128];
+    unsigned char buf[128];
     //unsigned char buf_w[2048];
     unsigned char buf_r[2048];
     uint8_t errorcode = 0;
