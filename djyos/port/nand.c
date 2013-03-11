@@ -58,11 +58,11 @@ unsigned char nand_read_status()
 
     if ((status&0x01) == 0x01)
     {
-        printf_str("\r\nCommand FAIL");
+        printf_str("\r\nNand Erase Command FAIL");
     }
     else
     {
-        printf_str("\r\nCommand OK");
+        printf_str("\r\nNand Erase Command OK");
     }
 
     return status;
@@ -125,7 +125,8 @@ int nand_read(unsigned int nand_start, unsigned char * buf, unsigned int len)
     //NFCONT &= ~(1 << 1);
     nand_select();  
   
-    while (count < len) {  
+    while (count < len) 
+    {  
         //NFCMMD = 0x00;
         nand_cmd(0x00);  
         nand_addr(addr);  
@@ -134,16 +135,19 @@ int nand_read(unsigned int nand_start, unsigned char * buf, unsigned int len)
         //while ((NFSTAT & 0x1) == 0);
         nand_ready();
   
-        for (i = 0; i < 2048 && count < len; i++) {  
+        for (i = 0; i < PAGE_SIZE && count < len; i++) 
+        {  
             data = NFDATA;  
-            /*for the 1st 4*4K, just used 2K each*/  
-            if(addr < 16384) {  
-                if(i < 2048)  
-                    dest[count++] = data;  
-            } else  
+            /* for the 1st 4*4K, just used 2K each*/
+            /* s3c6410 just support 512/2Kbyte per page */
+            //if(addr < 16384) 
+            //{  
+            //    if(i < 2048)  
+            //        dest[count++] = data;  
+            //} else  
                 dest[count++] = data;  
         }  
-        addr += 4096;  
+        addr += PAGE_SIZE;  
     }  
   
     //NFCONT |= (1 << 1);
@@ -152,12 +156,12 @@ int nand_read(unsigned int nand_start, unsigned char * buf, unsigned int len)
     return 0;
 }
 /*
- * addr:要擦除的块地址
- * size:要擦除的大小
+ * addr: addresss of block which will be erase
+ * size: 要擦除的大小
  */
 void nand_erase(unsigned long addr, unsigned int size)
 {
-    int n = size/BLOCK_SIZE;
+    int n = (size - 1)/BLOCK_SIZE;
 
     if( (addr % BLOCK_SIZE) !=0)
     {
@@ -211,12 +215,12 @@ void nand_write(unsigned int nand_start, unsigned char * buf, unsigned int len)
 		nand_addr(addr);
 		for (; i < PAGE_SIZE && count < len; i++)
 		{
-                    NFDATA = buf[count++];
-                    addr++;
+            NFDATA = buf[count++];
+            addr++;
 		}
 		nand_cmd(0x10);
 		nand_ready();
-                nand_read_status();
+        nand_read_status();
 		i = 0;
 	}
 	nand_deselect();

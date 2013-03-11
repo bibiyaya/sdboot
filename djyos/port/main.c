@@ -28,11 +28,11 @@ uint8_t get_packet( uint8_t *buf)
     {
         case SOH:
         {
-            scan_byte( );
-            scan_byte( );
+            scan_byte( );       // serial number of package
+            scan_byte( );       // two's complement of serial number
             for(i=0; i<128; i++)
-                buf[i] = scan_byte( );
-            scan_byte( );
+                buf[i] = scan_byte( );    // 128 byte of data package
+            scan_byte( );        // checksum of data package
             return SOH;
         }break;
         case CAN:
@@ -52,11 +52,13 @@ uint8_t get_packet( uint8_t *buf)
 int main(void)
 {
     uint32_t i = 0;
-    //bool_t eot=0;
-    //uint8_t *dbuf = 0x50004000;  // address of ddr ram
+    bool_t eot=0;
+    uint8_t *dbuf = 0x50004000;  // address of ddr ram
     //uint8_t *ddr_write = 0x57e00000;
     //uint8_t *ddr_read = 0x50004000;
-    //uint8_t pp = 0,cmd = NAK;
+    uint8_t pp  = 0;
+    uint8_t cmd = NAK;
+    uint32_t offset = 0;
     //unsigned char buf[128];
     //unsigned char buf_w[2048];
     unsigned char buf_r[2048];
@@ -66,7 +68,7 @@ int main(void)
 
     module_init_uart0();
     printf_str("\n\rwaiting...");
-/*
+
     while(1)
     {
         printf_byte(cmd);
@@ -89,13 +91,14 @@ int main(void)
             eot++;
         }else if(pp == 's')
         {
-            printf_str("\n\rturn to norflash");
-            return 0;
+            printf_str("\n\rCancel receive...");
+            break;
         }
     }
-*/
-    //printf_str("\n\rread date form sdram, address 0x50004000, len=128\n\r");
 
+    printf_str("\r\nWrite receive data to ddr ram, address 0x50004000");
+
+/*
     for(i=0;i<2048;i++)
     {
         //ddr_write[i] = 'a';
@@ -106,21 +109,23 @@ int main(void)
             printf_byte(buf_r[i]);
         }
     }
-
+*/
     for(i=0;i<1000;i++);
 
     /* nand flash erase */
     // erase block 0
     printf_str("\r\nnand erase...");
-    //nand_erase(0);
+    nand_erase(0,4*64*2*1024);        // erase 4 blocks
     for(i=0;i<1000;i++);
 
     /* nand flash write */
     printf_str("\r\nnand write...");
-    //nand_write(0,buf_w,2048);
+    nand_write(0,dbuf,offset);
     for(i=0;i<1000;i++);
 
+#if 0
     /* nand flash read */
+/*
     printf_str("\r\nnand read...");
     nand_read(0,buf_r,2048);
     for(i=0;i<1000;i++);
@@ -144,7 +149,8 @@ int main(void)
     {
         printf_str("\r\nnand test OK...");
     }
-
+*/
+#endif
     while(1);
 
     /*
