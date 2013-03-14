@@ -1,5 +1,6 @@
 #currentdir =$(shell pwd)
-currentdir = E:/Awork/EclipseWorkspace/sdboot6410/djyos/port
+#currentdir = E:/Awork/EclipseWorkspace/sdboot6410/djyos/port
+currentdir = d:/dongzhiyuan/work/workspace/sdboot/djyos/port
 
 #��������Ǳ�д�Լ�����Ŀ¼���е�makefileʱΨһ��Ҫ�޸ĵģ�������ĵ���djyos��makefile�ļ�˵����
 subdir =

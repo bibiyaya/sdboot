@@ -1,5 +1,7 @@
 #export topdir =$(shell pwd)
-export topdir = E:/Awork/EclipseWorkspace/sdboot6410
+#export topdir = E:/Awork/EclipseWorkspace/sdboot6410
+export topdir = d:/dongzhiyuan/work/workspace/sdboot
+
 include ./djyos/port/arch.def
 
 #�ڴ��г����а�Դ�ļ�����Ŀ¼����Ŀ¼����Ŀ¼�����г�

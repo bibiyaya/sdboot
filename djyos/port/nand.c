@@ -7,6 +7,7 @@
 #define NFADDR *((volatile unsigned long*)0x7020000C)
 #define NFDATA *((volatile unsigned char*)0x70200010)
 #define NFSTAT *((volatile unsigned long*)0x70200028)
+#define NFECC
 
 #define MEM_SYS_CFG *((volatile unsigned long*)0x7E00F120)
 
@@ -58,11 +59,11 @@ unsigned char nand_read_status()
 
     if ((status&0x01) == 0x01)
     {
-        printf_str("\r\nNand Erase Command FAIL");
+        printf_str("\r\nNand Command FAIL");
     }
     else
     {
-        printf_str("\r\nNand Erase Command OK");
+        printf_str("\r\nNand Command OK");
     }
 
     return status;
@@ -211,6 +212,7 @@ void nand_write(unsigned int nand_start, unsigned char * buf, unsigned int len)
 	nand_select();
 	while (count < len)
 	{
+        nand_rstecc();
 		nand_cmd(0x80);
 		nand_addr(addr);
 		for (; i < PAGE_SIZE && count < len; i++)
@@ -218,6 +220,8 @@ void nand_write(unsigned int nand_start, unsigned char * buf, unsigned int len)
             NFDATA = buf[count++];
             addr++;
 		}
+
+eccbuf[0] = 
 		nand_cmd(0x10);
 		nand_ready();
         nand_read_status();

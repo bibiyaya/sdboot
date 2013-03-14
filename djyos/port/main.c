@@ -54,15 +54,15 @@ int main(void)
     uint32_t i = 0;
     bool_t eot=0;
     uint8_t *dbuf = 0x50004000;  // address of ddr ram
-    //uint8_t *ddr_write = 0x57e00000;
-    //uint8_t *ddr_read = 0x50004000;
+    uint8_t *ddr_write = 0x57e00000;
+    uint8_t *ddr_read = 0x50004000;
     uint8_t pp  = 0;
     uint8_t cmd = NAK;
     uint32_t offset = 0;
     unsigned char buf[128];
     //unsigned char buf_w[2048];
     unsigned char buf_r[2048];
-    uint8_t errorcode = 0;
+    //uint8_t errorcode = 0;
     //pg_gpio_reg = (void*)0x7f008000;
     //chip_addr = (uint16_t *)flash_base_addr;
 
@@ -99,9 +99,9 @@ int main(void)
     printf_str("\r\nWrite receive data to ddr ram, address 0x50004000");
 
 /*
-    for(i=0;i<2048;i++)
+    for(i=0;i<128;i++)
     {
-        //ddr_write[i] = 'a';
+        ddr_write[i] = 'a';
         //buf_w[i] = 'k';
         buf_r[i] = 'b';
         if ( i < 10)
@@ -110,37 +110,41 @@ int main(void)
         }
     }
 */
+
+#if 0
     for(i=0;i<1000;i++);
 
     /* nand flash erase */
     // erase block 0
     printf_str("\r\nnand erase...");
-    nand_erase(0,4*64*2*1024);        // erase 4 blocks
+    nand_erase(0,2*1024);        // erase 1 blocks
     for(i=0;i<1000;i++);
 
     /* nand flash write */
     printf_str("\r\nnand write...");
-    nand_write(0,dbuf,offset);
+    nand_write(0,dbuf,128);
     for(i=0;i<1000;i++);
+#endif
 
-#if 0
     /* nand flash read */
-/*
     printf_str("\r\nnand read...");
-    nand_read(0,buf_r,2048);
-    for(i=0;i<1000;i++);
+    nand_read(0,buf_r,128);
 
-    printf_str("\r\nread date from ddr");
+    for(i=0;i<1000;i++);
+    //nand_read(0,ddr_read,128);
+
+    printf_str("\r\nread date from ddr\n\r");
     for(i=0;i<128;i++)
     {
-        if( buf_r[i] != 'k')
-        {
-            errorcode += 1;            
+    //if( buf_r[i] != 'k')
+    //{
+    // errorcode += 1;            
             //break;
-            printf_byte(buf_r[i]);
-        }
+        printf_byte(buf_r[i]);
+        //printf_byte(ddr_read[i]);
+    //}
     }
-
+/*
     if (errorcode != 0)
     {
         printf_str("\r\nnand test error...");
@@ -150,7 +154,7 @@ int main(void)
         printf_str("\r\nnand test OK...");
     }
 */
-#endif
+
     while(1);
 
     /*
